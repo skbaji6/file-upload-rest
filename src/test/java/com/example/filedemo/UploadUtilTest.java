@@ -17,7 +17,7 @@ public class UploadUtilTest {
 	public static void main(String[] args) throws IllegalArgumentException, IllegalAccessException {
 		UploadUtil util=new UploadUtil();
 		//util.getPdfProperties(Paths.get("C:\\Users\\bshaik10\\Desktop\\OpTransactionHistory05-10-2018.pdf"));
-		util.readPdf("C:\\Users\\bshaik10\\Desktop\\Loan Documents\\statement.pdf");
+		util.readPdf("C:\\Users\\Sharmila\\Desktop\\Untitled.pdf");
 	}
 
 }

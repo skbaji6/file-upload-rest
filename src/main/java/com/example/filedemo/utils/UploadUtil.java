@@ -5,43 +5,26 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.imageio.ImageIO;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.filedemo.payload.ImageProp;
+import com.example.filedemo.payload.PdfProp;
 import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.parser.PdfTextExtractor;
 
 @Component
 public class UploadUtil {
-
-	/*public double meanValueRedGreenBlue(BufferedImage image) {
-		double redSum = 0.0;
-		double greenSum = 0.0;
-		double blueSum = 0.0;
-
-		for (int y = 0; y < image.getHeight(); ++y) {
-			for (int x = 0; x < image.getWidth(); ++x) {
-				Color r = new Color(image.getRGB(x, y));
-				redSum += r.getRed();
-				greenSum += r.getGreen();
-				blueSum += r.getBlue();
-			}
-		}
-		System.out.println(redSum);
-		System.out.println(greenSum);
-		System.out.println(blueSum);
-		return ((redSum / (image.getWidth() * image.getHeight())) + (greenSum / (image.getWidth() * image.getHeight()))
-				+ (blueSum / (image.getWidth() * image.getHeight()))) / 3d;
-	}*/
 	
 	public double meanValueRGB(BufferedImage image) {
 		double rgbSum = 0.0;
@@ -55,7 +38,7 @@ public class UploadUtil {
 		return rgbSum / (image.getWidth() * image.getHeight()) ;
 	}
 	
-	public double getImageDetails(BufferedImage image) {
+	public ImageProp getImageDetails(BufferedImage image) {
 		double redSum = 0.0;
 		double greenSum = 0.0;
 		double blueSum = 0.0;
@@ -67,14 +50,17 @@ public class UploadUtil {
 				redSum += r.getRed();
 				greenSum += r.getGreen();
 				blueSum += r.getBlue();
-				blueSum += r.getRGB();
+				rgbSum += r.getRGB();
 			}
 		}
-		System.out.println(redSum);
-		System.out.println(greenSum);
-		System.out.println(blueSum);
-		return ((redSum / (image.getWidth() * image.getHeight())) + (greenSum / (image.getWidth() * image.getHeight()))
-				+ (blueSum / (image.getWidth() * image.getHeight()))) / 3d;}
+		ImageProp imageProp=new ImageProp();
+		imageProp.setMeanOfRed(redSum / (image.getWidth() * image.getHeight()));
+		imageProp.setMeanOfGreen(greenSum / (image.getWidth() * image.getHeight()));
+		imageProp.setMeanOfBlue(blueSum / (image.getWidth() * image.getHeight()));
+		imageProp.setMeanOfRGB(rgbSum / (image.getWidth() * image.getHeight()));
+		imageProp.setImageResolution(String.valueOf(image.getHeight())+" X "+String.valueOf(image.getWidth()));
+		return imageProp;
+		}
 
 	public BufferedImage getBufferedImage(String imageurl) {
 		BufferedImage image = null;
@@ -89,7 +75,8 @@ public class UploadUtil {
 	public boolean isInvalidFile(MultipartFile file) {
 
 		if (file.isEmpty() || file.getSize() == 0
-				|| !(file.getContentType().toLowerCase().equals("image/jpg")
+				|| !(file.getContentType().toLowerCase().equals("application/pdf")
+						|| file.getContentType().toLowerCase().equals("image/jpg")
 						|| file.getContentType().toLowerCase().equals("image/jpeg")
 						|| file.getContentType().toLowerCase().equals("image/png"))) {
 			return true;
@@ -98,29 +85,36 @@ public class UploadUtil {
 		return false;
 	}
 	
-	public void getPdfProperties(Path path) {
+	public PdfProp getPdfDetails(String path) {
+		PdfProp pdfProp =new PdfProp();
 		try{
-		PDDocument doc = PDDocument.load(path.toFile());
-		PDDocumentInformation info = doc.getDocumentInformation();
-		String author = info.getAuthor();
-		int pages = doc.getNumberOfPages();
-		// String creator = info.getCreator();
-		Calendar calendar = info.getCreationDate();
-		System.out.println("Author : " + author);
-		System.out.println(
-				"Created : " + new SimpleDateFormat("dd-MM-yyyy hh:mm:ss aa").format(calendar.getTimeInMillis()));
-		System.out.println("Total Pages : " + pages);
-		if (pages > 0) {
-			float width = doc.getPage(0).getMediaBox().getWidth();
-			float height = doc.getPage(0).getMediaBox().getHeight();
-			System.out.println("Page 0 size : " + width + " * " + height);
-		} else {
-			System.err.println("No pages.");
-		}
+			 PdfReader reader = new PdfReader(path);
+			 List<String> pageTexts = IntStream.rangeClosed(1, reader.getNumberOfPages()).mapToObj(i-> getpdfExtraction(reader,i)).collect(Collectors.toList());
+	            
+	            List<String> lines=pageTexts.stream().flatMap(page -> Arrays.stream(page.trim().split("\n"))).collect(Collectors.toList());
+	            Long wordCount=lines.stream().flatMap(line -> Arrays.stream(line.trim().split(" ")))
+	            	    .map(word -> word.replaceAll("[^a-zA-Z]", "").toLowerCase().trim())
+	            	    .filter(word -> !word.isEmpty()).count();
+			pdfProp.setTotalNoOfLines(String.valueOf(lines.size()));
+			pdfProp.setTotalNoOfWords(String.valueOf(wordCount));
+			Rectangle pdfPageRect=reader.getPageSizeWithRotation(1);
+			for(Field field:PageSize.class.getDeclaredFields()){
+            	Rectangle paper=((Rectangle)field.get(null));
+            	if(paper.getHeight()==pdfPageRect.getHeight() && paper.getWidth()==pdfPageRect.getWidth()){
+            		pdfProp.setPaperSize(field.getName());
+            		break;
+            	}
+            }
+			if(StringUtils.isEmpty(pdfProp.getPaperSize())){
+				pdfProp.setPaperSize(pdfPageRect.getHeight() +" X "+pdfPageRect.getWidth());
+			}
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}
+		return pdfProp;
 	}
+	
+	
 	
 	
 	public void readPdf(String string) throws IllegalArgumentException, IllegalAccessException {
@@ -130,23 +124,35 @@ public class UploadUtil {
         try {
 
             reader = new PdfReader(string);
+            int noOfPages=reader.getNumberOfPages();
+            List<String> pageTexts = IntStream.rangeClosed(1, reader.getNumberOfPages()).mapToObj(i-> getpdfExtraction(reader,i)).collect(Collectors.toList());
+            
+            List<String> lines=pageTexts.stream().flatMap(page -> Arrays.stream(page.trim().split("\n"))).collect(Collectors.toList());
+            Long wordCount=lines.stream().flatMap(line -> Arrays.stream(line.trim().split(" ")))
+            	    .map(word -> word.replaceAll("[^a-zA-Z]", "").toLowerCase().trim())
+            	    .filter(word -> !word.isEmpty()).count();
+            		
+            
 
-            // pageNumber = 1
-            String textFromPage = PdfTextExtractor.getTextFromPage(reader, 1);
-
-            //System.out.println(textFromPage);
+            System.out.println("LineCount : "+lines.size());
+            System.out.println("WordCount : "+wordCount);
+            
 
             //com.itextpdf.text.Rectangle rec=reader.getPageSize(0).;
-            System.out.println(reader.getPageSizeWithRotation(1).getHeight());
+            /*System.out.println(reader.getPageSizeWithRotation(1).getHeight());
             System.out.println(reader.getPageSizeWithRotation(1).getWidth());
             System.out.println(PageSize.A4.getHeight());
-            System.out.println(PageSize.A4.getWidth());
-            if(reader.getPageSizeWithRotation(1).equals(PageSize.A4)){
-            	System.out.println();
-            }
+            System.out.println(PageSize.A4.getWidth());*/
+            Rectangle pdfPageRect=reader.getPageSizeWithRotation(1);
             for(Field field:PageSize.class.getDeclaredFields()){
-            	System.out.println(field.getName());
+            	Rectangle paper=((Rectangle)field.get(null));
+            	if(paper.getHeight()==pdfPageRect.getHeight() && paper.getWidth()==pdfPageRect.getWidth()){
+            		System.out.println(field.getName());
+            	}
             }
+			
+				System.out.println(pdfPageRect.getHeight() +" X "+pdfPageRect.getWidth());
+			
             	
             reader.close();
 
@@ -155,5 +161,14 @@ public class UploadUtil {
         }
 
     }
+
+	private String getpdfExtraction(PdfReader reader,int i) {
+		try {
+			return PdfTextExtractor.getTextFromPage(reader,i);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 
 }

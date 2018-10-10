@@ -1,6 +1,7 @@
 package com.example.filedemo.controller;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.filedemo.payload.UploadFileResponse;
+import com.example.filedemo.repository.FileDetail;
 import com.example.filedemo.service.FileStorageService;
 import com.example.filedemo.utils.UploadUtil;
 
@@ -36,18 +37,14 @@ public class FileController {
 	private UploadUtil uploadUtil;
 
 	@PostMapping("/uploadFile")
-	public ResponseEntity<List<UploadFileResponse>> uploadFile(@RequestParam("file") MultipartFile file) {
+	public ResponseEntity<List<FileDetail>> uploadFile(@RequestParam("file") MultipartFile file) {
 		if (uploadUtil.isInvalidFile(file)) {
-			return ResponseEntity.badRequest().body(null);
+			return ResponseEntity.badRequest().body(new ArrayList<FileDetail>());
 		}
-		String fileName = fileStorageService.storeFile(file);
-
-		/*
-		 * String fileDownloadUri =
-		 * ServletUriComponentsBuilder.fromCurrentContextPath()
-		 * .path("/downloadFile/") .path(fileName) .toUriString(); ;
-		 */
-		return new ResponseEntity<List<UploadFileResponse>>(fileStorageService.loadFilesAsResponse(),HttpStatus.OK);
+		fileStorageService.storeFile(file);
+		List<FileDetail> fileDetails= fileStorageService.getAllFileDetails();
+		
+		return new ResponseEntity<List<FileDetail>>(fileDetails,HttpStatus.OK);
 	}
 
 	@GetMapping("/downloadFile/{fileName:.+}")
