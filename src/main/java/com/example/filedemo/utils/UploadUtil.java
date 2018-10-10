@@ -26,18 +26,6 @@ import com.itextpdf.text.pdf.parser.PdfTextExtractor;
 @Component
 public class UploadUtil {
 	
-	public double meanValueRGB(BufferedImage image) {
-		double rgbSum = 0.0;
-
-		for (int y = 0; y < image.getHeight(); ++y) {
-			for (int x = 0; x < image.getWidth(); ++x) {
-				rgbSum +=image.getRGB(x, y);
-			}
-		}
-		System.out.println(rgbSum);
-		return rgbSum / (image.getWidth() * image.getHeight()) ;
-	}
-	
 	public ImageProp getImageDetails(BufferedImage image) {
 		double redSum = 0.0;
 		double greenSum = 0.0;
@@ -114,54 +102,6 @@ public class UploadUtil {
 		return pdfProp;
 	}
 	
-	
-	
-	
-	public void readPdf(String string) throws IllegalArgumentException, IllegalAccessException {
-
-        PdfReader reader;
-
-        try {
-
-            reader = new PdfReader(string);
-            int noOfPages=reader.getNumberOfPages();
-            List<String> pageTexts = IntStream.rangeClosed(1, reader.getNumberOfPages()).mapToObj(i-> getpdfExtraction(reader,i)).collect(Collectors.toList());
-            
-            List<String> lines=pageTexts.stream().flatMap(page -> Arrays.stream(page.trim().split("\n"))).collect(Collectors.toList());
-            Long wordCount=lines.stream().flatMap(line -> Arrays.stream(line.trim().split(" ")))
-            	    .map(word -> word.replaceAll("[^a-zA-Z]", "").toLowerCase().trim())
-            	    .filter(word -> !word.isEmpty()).count();
-            		
-            
-
-            System.out.println("LineCount : "+lines.size());
-            System.out.println("WordCount : "+wordCount);
-            
-
-            //com.itextpdf.text.Rectangle rec=reader.getPageSize(0).;
-            /*System.out.println(reader.getPageSizeWithRotation(1).getHeight());
-            System.out.println(reader.getPageSizeWithRotation(1).getWidth());
-            System.out.println(PageSize.A4.getHeight());
-            System.out.println(PageSize.A4.getWidth());*/
-            Rectangle pdfPageRect=reader.getPageSizeWithRotation(1);
-            for(Field field:PageSize.class.getDeclaredFields()){
-            	Rectangle paper=((Rectangle)field.get(null));
-            	if(paper.getHeight()==pdfPageRect.getHeight() && paper.getWidth()==pdfPageRect.getWidth()){
-            		System.out.println(field.getName());
-            	}
-            }
-			
-				System.out.println(pdfPageRect.getHeight() +" X "+pdfPageRect.getWidth());
-			
-            	
-            reader.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
 	private String getpdfExtraction(PdfReader reader,int i) {
 		try {
 			return PdfTextExtractor.getTextFromPage(reader,i);
