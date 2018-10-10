@@ -1,5 +1,6 @@
 package com.example.filedemo.service;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -22,11 +23,14 @@ import com.example.filedemo.exception.FileStorageException;
 import com.example.filedemo.exception.MyFileNotFoundException;
 import com.example.filedemo.payload.UploadFileResponse;
 import com.example.filedemo.property.FileStorageProperties;
+import com.example.filedemo.utils.UploadUtil;
 
 @Service
 public class FileStorageService {
 
 	private final Path fileStorageLocation;
+	@Autowired
+	private UploadUtil uploadUtil;
 
 	@Autowired
 	public FileStorageService(FileStorageProperties fileStorageProperties) {
@@ -93,12 +97,23 @@ public class FileStorageService {
 	public UploadFileResponse getUploadFileResponse(Path path) {
 		try {
 			BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
-	        
-			return new UploadFileResponse(path.getFileName().toString(), getFileDownloadURL(path.getFileName().toString()),
-			        Files.probeContentType(path), Files.size(path),attr.creationTime().toString(),attr.lastModifiedTime().toString());
+			UploadFileResponse res=null;
+			if(Files.probeContentType(path).contains("pdf")){
+				
+			}else{
+				res=new UploadFileResponse(path.getFileName().toString(), getFileDownloadURL(path.getFileName().toString()),
+				        Files.probeContentType(path), Files.size(path),attr.creationTime().toString(),attr.lastModifiedTime().toString(),);
+			}
+			return res;
 		} catch (IOException ex) {
 			throw new FileStorageException("Could not create UploadFileResponse.",
 					ex);
 		}
 	}
+	
+	public String getImageResolution(Path path) {
+		BufferedImage image=uploadUtil.getBufferedImage(path.toString());
+		uploadUtil.
+	}
+	
 }

@@ -23,7 +23,7 @@ import com.itextpdf.text.pdf.parser.PdfTextExtractor;
 @Component
 public class UploadUtil {
 
-	public double meanValueRedGreenBlue(BufferedImage image) {
+	/*public double meanValueRedGreenBlue(BufferedImage image) {
 		double redSum = 0.0;
 		double greenSum = 0.0;
 		double blueSum = 0.0;
@@ -41,7 +41,7 @@ public class UploadUtil {
 		System.out.println(blueSum);
 		return ((redSum / (image.getWidth() * image.getHeight())) + (greenSum / (image.getWidth() * image.getHeight()))
 				+ (blueSum / (image.getWidth() * image.getHeight()))) / 3d;
-	}
+	}*/
 	
 	public double meanValueRGB(BufferedImage image) {
 		double rgbSum = 0.0;
@@ -54,6 +54,27 @@ public class UploadUtil {
 		System.out.println(rgbSum);
 		return rgbSum / (image.getWidth() * image.getHeight()) ;
 	}
+	
+	public double getImageDetails(BufferedImage image) {
+		double redSum = 0.0;
+		double greenSum = 0.0;
+		double blueSum = 0.0;
+		double rgbSum = 0.0;
+
+		for (int y = 0; y < image.getHeight(); ++y) {
+			for (int x = 0; x < image.getWidth(); ++x) {
+				Color r = new Color(image.getRGB(x, y));
+				redSum += r.getRed();
+				greenSum += r.getGreen();
+				blueSum += r.getBlue();
+				blueSum += r.getRGB();
+			}
+		}
+		System.out.println(redSum);
+		System.out.println(greenSum);
+		System.out.println(blueSum);
+		return ((redSum / (image.getWidth() * image.getHeight())) + (greenSum / (image.getWidth() * image.getHeight()))
+				+ (blueSum / (image.getWidth() * image.getHeight()))) / 3d;}
 
 	public BufferedImage getBufferedImage(String imageurl) {
 		BufferedImage image = null;
