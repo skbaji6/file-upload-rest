@@ -5,11 +5,6 @@ var singleFileUploadInput = document.querySelector('#singleFileUploadInput');
 var singleFileUploadError = document.querySelector('#singleFileUploadError');
 var singleFileUploadSuccess = document.querySelector('#singleFileUploadSuccess');
 
-var multipleUploadForm = document.querySelector('#multipleUploadForm');
-var multipleFileUploadInput = document.querySelector('#multipleFileUploadInput');
-var multipleFileUploadError = document.querySelector('#multipleFileUploadError');
-var multipleFileUploadSuccess = document.querySelector('#multipleFileUploadSuccess');
-
 var modalBody = document.querySelector('#modalBody');
 
 function uploadSingleFile(file) {
@@ -116,7 +111,8 @@ function getContent(response) {
 		}else if(response[i].fileType == 'Pdf'){
 			content +="<td><a href='" + response[i].fileDownloadUri + "' target='_blank'><img src='/images/pdf.png' alt='"+response[i].fileName+"' style='width:80px;height:80px'></td>" ;
 		}
-		content +=	"<td><a class='button button-primary' onclick='openModal("+JSON.stringify(response[i])+");'>Show Properties</a></td>" +
+		content +=	"<td>"+response[i].fileName+"</td>" +
+					"<td><a class='button button-primary' onclick='openModal("+JSON.stringify(response[i])+");'>Show Properties</a></td>" +
 					"<td><a class='button button-primary' onclick='deleteFile("+response[i].id+");'>Delete</a></td>" +
 					"</tr>";
 	}

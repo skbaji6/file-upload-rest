@@ -77,8 +77,20 @@ public class FileController {
 	
 	@DeleteMapping("/deleteFile/{fileId}")
 	public ResponseEntity<List<FileDetail>> deleteFile(@PathVariable("fileId") Long fileId) {
-		fileStorageService.deleteFile(fileId);
+		fileStorageService.changeStatusOfFile(fileId,"D");
 		return new ResponseEntity<List<FileDetail>>(fileStorageService.getAllFileDetails(),HttpStatus.OK);
+	}
+	
+	@GetMapping("/getAllDeletedFiles")
+	public ResponseEntity<List<FileDetail>> getAllDeletedFiles() {
+		List<FileDetail> fileDetails= fileStorageService.getAllDeletedFileDetails();
+		return new ResponseEntity<List<FileDetail>>(fileDetails,HttpStatus.OK);
+	}
+	
+	@GetMapping("/recoverFile/{fileId}")
+	public ResponseEntity<List<FileDetail>> recoverFile(@PathVariable("fileId") Long fileId) {
+		fileStorageService.changeStatusOfFile(fileId,"A");
+		return new ResponseEntity<List<FileDetail>>(fileStorageService.getAllDeletedFileDetails(),HttpStatus.OK);
 	}
 
 }

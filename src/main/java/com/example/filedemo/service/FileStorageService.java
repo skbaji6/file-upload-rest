@@ -122,16 +122,22 @@ public class FileStorageService {
 		List<FileDetail> allFiles=filesRepository.findAll();
 		return allFiles.stream().map(filteredFile -> {
 			if(filteredFile.getDocStatus().equals("A") && new Date(filteredFile.getUploadedDate().getTime()+(minutesWaitToDeleteFile*ONE_MINUTE_IN_MILLIS)).before(new Date())){
-				deleteFile(filteredFile.getId());
+				changeStatusOfFile(filteredFile.getId(),"D");
 			}
 			return filteredFile;
 			}).filter(file ->file.getDocStatus().equals("A")).collect(Collectors.toList());
 	}
 	
-	public void deleteFile(Long fileId) {
+	public void changeStatusOfFile(Long fileId,String status) {
 		Optional<FileDetail> filedetail=filesRepository.findById(fileId);
-		filedetail.ifPresent(file -> {file.setDocStatus("D");
+		filedetail.ifPresent(file -> {file.setDocStatus(status);
+			file.setUploadedDate(new Date());
 			filesRepository.save(file);});
+	}
+	
+	public List<FileDetail> getAllDeletedFileDetails() {
+		List<FileDetail> allFiles=filesRepository.findAll();
+		return allFiles.stream().filter(file ->file.getDocStatus().equals("D")).collect(Collectors.toList());
 	}
 	
 }
