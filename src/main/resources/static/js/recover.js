@@ -36,9 +36,9 @@ function getContent(response) {
 	for(var i = 0; i < response.length; i++) { 
 		content += "<tr>";
 		if(response[i].fileType == 'Image'){
-			content += "<td><a href='" + response[i].fileDownloadUri + "' target='_blank'><img src='"+response[i].fileDownloadUri+"' alt='Forest' style='width:80px;height:80px'></a></td>";			
+			content += "<td><img src='"+response[i].fileDownloadUri+"/download' alt='Forest' style='width:80px;height:80px'></td>";			
 		}else if(response[i].fileType == 'Pdf'){
-			content +="<td><a href='" + response[i].fileDownloadUri + "' target='_blank'><img src='/images/pdf.png' alt='"+response[i].fileName+"' style='width:80px;height:80px'></td>" ;
+			content +="<td><img src='/images/pdf.png' alt='"+response[i].fileName+"' style='width:80px;height:80px'></td>" ;
 		}
 		content +=	"<td>"+response[i].fileName+"</td>" +
 					"<td><a class='button button-primary' onclick='recoverFile("+response[i].id+");'>Recover</a></td>" +

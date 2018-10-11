@@ -15,7 +15,7 @@ function uploadSingleFile(file) {
     xhr.open("POST", "/uploadFile");
 
     xhr.onload = function() {
-        console.log(xhr.responseText);
+        //console.log(xhr.responseText);
         var response = JSON.parse(xhr.responseText);
         if(xhr.status == 200) {
             singleFileUploadError.style.display = "none";
@@ -50,7 +50,7 @@ singleUploadForm.addEventListener('submit', function(event){
 function openModal(fileProp){
 	var modalHtml=
 	'<p> File Name : '+fileProp.fileName+'</p>'+
-	'<p> File Download : <a href=' + fileProp.fileDownloadUri +' target="_blank">Download</a></p>'+
+	'<p> File Download : <a href="' + fileProp.fileDownloadUri +'/download" target="_blank">Download</a></p>'+
 	'<p> File Type : '+fileProp.fileType+'</p>'+
 	'<p> File Size : '+bytesToSize(fileProp.size)+'</p>'+
 	'<p> Creation Date : '+fileProp.creationDate+'</p>'+
@@ -81,7 +81,7 @@ function deleteFile(fileId) {
     xhr.open("DELETE", "/deleteFile/"+fileId);
 
     xhr.onload = function() {
-        console.log(xhr.responseText);
+        //console.log(xhr.responseText);
         var response = JSON.parse(xhr.responseText);
         singleFileUploadSuccess.innerHTML = getContent(response);
         singleFileUploadSuccess.style.display = "block";
@@ -94,7 +94,7 @@ function getAllFiles() {
     xhr.open("GET", "/getAllUploadedFiles");
 
     xhr.onload = function() {
-        console.log(xhr.responseText);
+        //console.log(xhr.responseText);
         var response = JSON.parse(xhr.responseText);
         singleFileUploadSuccess.innerHTML = getContent(response);
         singleFileUploadSuccess.style.display = "block";
@@ -107,11 +107,11 @@ function getContent(response) {
 	for(var i = 0; i < response.length; i++) { 
 		content += "<tr>";
 		if(response[i].fileType == 'Image'){
-			content += "<td><a href='" + response[i].fileDownloadUri + "' target='_blank'><img src='"+response[i].fileDownloadUri+"' alt='Forest' style='width:80px;height:80px'></a></td>";			
+			content += "<td><a href='" + response[i].fileDownloadUri + "/download' target='_blank'><img src='"+response[i].fileDownloadUri+"/download' alt='Forest' style='width:80px;height:80px'></a></td>";			
 		}else if(response[i].fileType == 'Pdf'){
-			content +="<td><a href='" + response[i].fileDownloadUri + "' target='_blank'><img src='/images/pdf.png' alt='"+response[i].fileName+"' style='width:80px;height:80px'></td>" ;
+			content +="<td><a href='" + response[i].fileDownloadUri + "/download' target='_blank'><img src='/images/pdf.png' alt='"+response[i].fileName+"' style='width:80px;height:80px'></td>" ;
 		}
-		content +=	"<td>"+response[i].fileName+"</td>" +
+		content +=	"<td><a href='javascript:void(0)' onclick='loadPdf(\""+response[i].fileDownloadUri+"\")'>View</a></td>"+
 					"<td><a class='button button-primary' onclick='openModal("+JSON.stringify(response[i])+");'>Show Properties</a></td>" +
 					"<td><a class='button button-primary' onclick='deleteFile("+response[i].id+");'>Delete</a></td>" +
 					"</tr>";
@@ -130,4 +130,21 @@ function bytesToSize(bytes) {
 window.onload = function WindowLoad(event) {
 	getAllFiles();
 }
+
+function loadPdf(url){
+	var newWin = window.open("","_blank","width=400,height=300");
+
+    /* The html you want to write in the new window. */
+    var html = "<body>" +
+    		"<script>function resizeIframe(obj)" +
+    		" { obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';}" +
+    		"</script>" +
+    		"<iframe frameBorder='0' src='"+url+"/view' scrolling='auto' onload='resizeIframe(this)' width='1080' height='600'/>" +
+    				"</body>";
+
+  /* Get the window's document and write the html content. */
+  newWin.document.write(html);
+	
+}
+
 
