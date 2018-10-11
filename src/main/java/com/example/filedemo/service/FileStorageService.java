@@ -8,8 +8,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,7 @@ import com.example.filedemo.utils.UploadUtil;
 public class FileStorageService {
 
 	private final Path fileStorageLocation;
+	private final Integer minutesWaitToDeleteFile;
 	
 	@Autowired
 	private UploadUtil uploadUtil;
@@ -42,11 +46,12 @@ public class FileStorageService {
 	
 	public static final String PDF="Pdf";
 	public static final String IMAGE="Image";
+	public static final long ONE_MINUTE_IN_MILLIS=60000;
 
 	@Autowired
 	public FileStorageService(FileStorageProperties fileStorageProperties) {
 		this.fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize();
-
+		this.minutesWaitToDeleteFile=fileStorageProperties.getMinutesWaitToDeleteFile();
 		try {
 			Files.createDirectories(this.fileStorageLocation);
 		} catch (Exception ex) {
@@ -85,6 +90,7 @@ public class FileStorageService {
 				PdfProp pdfProp=uploadUtil.getPdfDetails(fileStorageLocation+File.separator+fileName);
 					BeanUtils.copyProperties(pdfProp, fileDetail);
 			}
+			fileDetail.setUploadedDate(new Date());
 			filesRepository.save(fileDetail);
 
 			return fileName;
@@ -114,7 +120,19 @@ public class FileStorageService {
 	
 
 	public List<FileDetail> getAllFileDetails() {
-		return filesRepository.findAll();
+		List<FileDetail> allFiles=filesRepository.findAll();
+		return allFiles.stream().map(filteredFile -> {
+			if(filteredFile.getDocStatus().equals("A") && new Date(filteredFile.getUploadedDate().getTime()+(minutesWaitToDeleteFile*ONE_MINUTE_IN_MILLIS)).before(new Date())){
+				deleteFile(filteredFile.getId());
+			}
+			return filteredFile;
+			}).filter(file ->file.getDocStatus().equals("A")).collect(Collectors.toList());
+	}
+	
+	public void deleteFile(Long fileId) {
+		Optional<FileDetail> filedetail=filesRepository.findById(fileId);
+		filedetail.ifPresent(file -> {file.setDocStatus("D");
+			filesRepository.save(file);});
 	}
 	
 }

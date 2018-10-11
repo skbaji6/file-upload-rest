@@ -1,5 +1,7 @@
 package com.example.filedemo.repository;
 
+import java.util.Date;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -25,6 +27,7 @@ public class FileDetail {
 	private String totalNoOfLines;
 	private String totalNoOfWords;
 	private String docStatus;
+	private Date uploadedDate;
 	
 	public FileDetail() {
 		super();
@@ -136,6 +139,12 @@ public class FileDetail {
 	}
 	public void setDocStatus(String docStatus) {
 		this.docStatus = docStatus;
+	}
+	public Date getUploadedDate() {
+		return uploadedDate;
+	}
+	public void setUploadedDate(Date uploadedDate) {
+		this.uploadedDate = uploadedDate;
 	}
 	
 	

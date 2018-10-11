@@ -96,6 +96,7 @@ public class UploadUtil {
 			if(StringUtils.isEmpty(pdfProp.getPaperSize())){
 				pdfProp.setPaperSize(pdfPageRect.getHeight() +" X "+pdfPageRect.getWidth());
 			}
+			reader.close();
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}
